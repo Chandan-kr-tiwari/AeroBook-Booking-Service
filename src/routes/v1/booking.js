@@ -19,4 +19,6 @@ router.patch(
     BookingController.cancelBooking
 );
 
+router.get('/:bookingId', BookingController.getBooking);
+
 module.exports = router;

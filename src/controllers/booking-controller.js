@@ -87,10 +87,34 @@ async function cancelBooking(req, res) {
     }
 }
 
+async function getBooking(req, res) {
+    try {
+        const response = await BookingService.getBooking(
+            req.params.bookingId
+        );
+
+        SuccessResponse.data = response;
+
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse);
+
+    } catch (error) {
+        console.log(error);
+
+        ErrorResponse.error = error;
+
+        return res
+            .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
+    }
+}
+
 
 
 module.exports = {
     createBooking,
     makePayment,
-    cancelBooking
+    cancelBooking,
+    getBooking
 }

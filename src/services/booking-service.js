@@ -139,9 +139,14 @@ async function cancelOldBookings() {
     }
 }
 
+async function getBooking(bookingId) {
+    return await bookingRepository.get(bookingId);
+}
+
 module.exports = {
     createBooking,
     makePayment,
     cancelBooking,
-    cancelOldBookings
+    cancelOldBookings,
+    getBooking
 }
