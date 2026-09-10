@@ -9,10 +9,10 @@ router.post(
     BookingController.createBooking
 )
 
-router.post(
-    '/payments',
-    BookingController.makePayment
-);
+// router.post(
+//     '/payments',
+//     BookingController.makePayment
+// );
 
 router.patch(
     '/:bookingId/cancel',
@@ -20,5 +20,10 @@ router.patch(
 );
 
 router.get('/:bookingId', BookingController.getBooking);
+
+router.patch(
+    '/:bookingId/confirm',
+    BookingController.confirmBooking
+);
 
 module.exports = router;

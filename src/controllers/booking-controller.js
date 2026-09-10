@@ -111,10 +111,32 @@ async function getBooking(req, res) {
 }
 
 
+async function confirmBooking(req, res) {
+    try {
+        const booking = await bookingService.confirmBooking(
+            req.params.bookingId
+        );
+
+        return res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Booking confirmed successfully',
+            data: booking
+        });
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: error.message,
+            data: {}
+        });
+    }
+}
+
+
 
 module.exports = {
     createBooking,
     makePayment,
     cancelBooking,
-    getBooking
+    getBooking,
+    confirmBooking
 }

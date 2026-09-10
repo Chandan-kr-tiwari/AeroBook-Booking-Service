@@ -143,10 +143,55 @@ async function getBooking(bookingId) {
     return await bookingRepository.get(bookingId);
 }
 
+async function confirmBooking(bookingId) {
+    const transaction = await db.sequelize.transaction();
+
+    try {
+        const bookingDetails = await bookingRepository.get(
+            bookingId,
+            transaction
+        );
+
+        if (!bookingDetails) {
+            throw new AppError(
+                'Booking not found',
+                StatusCodes.NOT_FOUND
+            );
+        }
+
+        if (bookingDetails.status === CANCELLED) {
+            throw new AppError(
+                'Cannot confirm a cancelled booking',
+                StatusCodes.BAD_REQUEST
+            );
+        }
+
+        if (bookingDetails.status === BOOKED) {
+            await transaction.commit();
+            return bookingDetails;
+        }
+
+        await bookingRepository.update(
+            bookingId,
+            { status: BOOKED },
+            transaction
+        );
+
+        await transaction.commit();
+
+        return await bookingRepository.get(bookingId);
+
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+}
+
 module.exports = {
     createBooking,
     makePayment,
     cancelBooking,
     cancelOldBookings,
-    getBooking
+    getBooking,
+    confirmBooking
 }
