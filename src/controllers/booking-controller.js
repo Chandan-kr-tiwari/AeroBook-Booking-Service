@@ -113,7 +113,7 @@ async function getBooking(req, res) {
 
 async function confirmBooking(req, res) {
     try {
-        const booking = await bookingService.confirmBooking(
+        const booking = await BookingService.confirmBooking(
             req.params.bookingId
         );
 
