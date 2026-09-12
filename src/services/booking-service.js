@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { StatusCodes } = require('http-status-codes');
+const {PublishEvent} =require('../events')
 
 const { BookingRepository } = require('../repositories');
 const { ServerConfig, Queue } = require('../config');
@@ -78,68 +79,68 @@ async function createBooking(data) {
     }
 }
 
+//only for simulation without the payment service
+// async function makePayment(data) {
+//     const transaction = await db.sequelize.transaction();
 
-async function makePayment(data) {
-    const transaction = await db.sequelize.transaction();
+//     try {
+//         const bookingDetails =
+//             await bookingRepository.get(
+//                 data.bookingId,
+//                 transaction
+//             );
 
-    try {
-        const bookingDetails =
-            await bookingRepository.get(
-                data.bookingId,
-                transaction
-            );
+//         if (bookingDetails.status == CANCELLED) {
+//             throw new AppError(
+//                 'The booking has expired',
+//                 StatusCodes.BAD_REQUEST
+//             );
+//         }
 
-        if (bookingDetails.status == CANCELLED) {
-            throw new AppError(
-                'The booking has expired',
-                StatusCodes.BAD_REQUEST
-            );
-        }
+//         console.log(bookingDetails);
 
-        console.log(bookingDetails);
+//         const bookingTime =
+//             new Date(bookingDetails.createdAt);
 
-        const bookingTime =
-            new Date(bookingDetails.createdAt);
+//         const currentTime = new Date();
 
-        const currentTime = new Date();
+//         if (currentTime - bookingTime > 300000) {
+//             await cancelBooking(data.bookingId);
 
-        if (currentTime - bookingTime > 300000) {
-            await cancelBooking(data.bookingId);
+//             throw new AppError(
+//                 'The booking has expired',
+//                 StatusCodes.BAD_REQUEST
+//             );
+//         }
 
-            throw new AppError(
-                'The booking has expired',
-                StatusCodes.BAD_REQUEST
-            );
-        }
+//         if (bookingDetails.totalCost != data.totalCost) {
+//             throw new AppError(
+//                 'The amount of the payment doesnt match',
+//                 StatusCodes.BAD_REQUEST
+//             );
+//         }
 
-        if (bookingDetails.totalCost != data.totalCost) {
-            throw new AppError(
-                'The amount of the payment doesnt match',
-                StatusCodes.BAD_REQUEST
-            );
-        }
+//         if (bookingDetails.userId != data.userId) {
+//             throw new AppError(
+//                 'The user corresponding to the booking doesnt match',
+//                 StatusCodes.BAD_REQUEST
+//             );
+//         }
 
-        if (bookingDetails.userId != data.userId) {
-            throw new AppError(
-                'The user corresponding to the booking doesnt match',
-                StatusCodes.BAD_REQUEST
-            );
-        }
+//         // We assume here that payment is successful
+//         await bookingRepository.update(
+//             data.bookingId,
+//             { status: BOOKED },
+//             transaction
+//         );
 
-        // We assume here that payment is successful
-        await bookingRepository.update(
-            data.bookingId,
-            { status: BOOKED },
-            transaction
-        );
+//         await transaction.commit();
 
-        await transaction.commit();
-
-    } catch (error) {
-        await transaction.rollback();
-        throw error;
-    }
-}
+//     } catch (error) {
+//         await transaction.rollback();
+//         throw error;
+//     }
+// }
 
 
 async function cancelBooking(bookingId) {
@@ -175,6 +176,14 @@ async function cancelBooking(bookingId) {
         );
 
         await transaction.commit();
+
+        await PublishEvent('booking.cancelled', {
+        bookingId: bookingDetails.id,
+        userId: bookingDetails.userId,
+        flightId: bookingDetails.flightId,
+        noofSeats: bookingDetails.noofSeats,
+        reason: 'Booking cancelled'
+});
 
     } catch (error) {
         await transaction.rollback();
@@ -271,6 +280,15 @@ async function confirmBooking(bookingId) {
         const updatedBooking =
             await bookingRepository.get(bookingId);
 
+            // Publish booking confirmed event
+        await PublishEvent('booking.confirmed', {
+         bookingId: updatedBooking.id,
+         userId: updatedBooking.userId,
+         flightId: updatedBooking.flightId,
+         noofSeats: updatedBooking.noofSeats,
+         totalCost: updatedBooking.totalCost
+});
+
         return updatedBooking;
 
     } catch (error) {
@@ -298,7 +316,7 @@ async function confirmBooking(bookingId) {
 
 module.exports = {
     createBooking,
-    makePayment,
+    
     cancelBooking,
     cancelOldBookings,
     getBooking,

@@ -1,6 +1,8 @@
 const express = require('express');
 
 const { ServerConfig, Logger } = require('./config');
+
+const {ConnectRabbitMq} = require('./events')
 const apiRoutes = require('./routes');
 
 const app = express();
@@ -15,12 +17,25 @@ app.get('/', (req, res) => {
     res.send('health');
 });
 
-const server = app.listen(ServerConfig.PORT, () => {
-    Logger.info(
-        `Successfully started the server on PORT: ${ServerConfig.PORT}`
-    );
-});
+const startServer = async () => {
+    try {
+        await ConnectRabbitMq();
 
-server.on('error', (error) => {
-    Logger.error(`Server error: ${error.message}`);
-});
+        const server = app.listen(ServerConfig.PORT, () => {
+            Logger.info(
+                `Successfully started the server on PORT: ${ServerConfig.PORT}`
+            );
+        });
+
+        server.on('error', (error) => {
+            Logger.error(`Server error: ${error.message}`);
+        });
+
+    } catch (error) {
+        Logger.error(`Failed to start server: ${error.message}`);
+        process.exit(1);
+    }
+};
+
+startServer();
+

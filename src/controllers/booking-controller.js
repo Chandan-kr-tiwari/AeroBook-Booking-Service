@@ -31,38 +31,38 @@ async function createBooking(req, res) {
 }
 }
 
-
-async function makePayment(req, res) {
-    try {
-        const idempotencyKey = req.headers['x-idempotency-key'];
-        if(!idempotencyKey ) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({message: 'idempotency key missing'});
-        }
-        if(inMemDb[idempotencyKey]) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json({message: 'Cannot retry on a successful payment'});
-        } 
-        const response = await BookingService.makePayment({
-            totalCost: req.body.totalCost,
-            userId: req.body.userId,
-            bookingId: req.body.bookingId
-        });
-        inMemDb[idempotencyKey] = idempotencyKey;
-        SuccessResponse.data = response;
-        return res
-                .status(StatusCodes.OK)
-                .json(SuccessResponse);
-    } catch(error) {
-        console.log(error);
-        ErrorResponse.error = error;
-        return res
-                .status(StatusCodes.INTERNAL_SERVER_ERROR)
-                .json(ErrorResponse);
-    }
-}
+// removed because it was a simulation for payment before payment services
+// async function makePayment(req, res) {
+//     try {
+//         const idempotencyKey = req.headers['x-idempotency-key'];
+//         if(!idempotencyKey ) {
+//             return res
+//                 .status(StatusCodes.BAD_REQUEST)
+//                 .json({message: 'idempotency key missing'});
+//         }
+//         if(inMemDb[idempotencyKey]) {
+//             return res
+//                 .status(StatusCodes.BAD_REQUEST)
+//                 .json({message: 'Cannot retry on a successful payment'});
+//         } 
+//         const response = await BookingService.makePayment({
+//             totalCost: req.body.totalCost,
+//             userId: req.body.userId,
+//             bookingId: req.body.bookingId
+//         });
+//         inMemDb[idempotencyKey] = idempotencyKey;
+//         SuccessResponse.data = response;
+//         return res
+//                 .status(StatusCodes.OK)
+//                 .json(SuccessResponse);
+//     } catch(error) {
+//         console.log(error);
+//         ErrorResponse.error = error;
+//         return res
+//                 .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//                 .json(ErrorResponse);
+//     }
+// }
 
 async function cancelBooking(req, res) {
     try {
@@ -135,7 +135,7 @@ async function confirmBooking(req, res) {
 
 module.exports = {
     createBooking,
-    makePayment,
+    
     cancelBooking,
     getBooking,
     confirmBooking
