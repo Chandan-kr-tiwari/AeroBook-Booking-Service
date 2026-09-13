@@ -143,7 +143,7 @@ async function createBooking(data) {
 // }
 
 
-async function cancelBooking(bookingId) {
+async function cancelBooking(bookingId,userId) {
     const transaction =
         await db.sequelize.transaction();
 
@@ -160,6 +160,13 @@ async function cancelBooking(bookingId) {
             await transaction.commit();
             return true;
         }
+        
+         if (bookingDetails.userId !== userId) {
+            throw new AppError(
+            'You are not authorized to cancel this booking',
+             StatusCodes.FORBIDDEN
+    );
+}
 
         await axios.patch(
             `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${bookingDetails.flightId}/seats`,
@@ -210,8 +217,24 @@ async function cancelOldBookings() {
 }
 
 
-async function getBooking(bookingId) {
-    return await bookingRepository.get(bookingId);
+async function getBooking(bookingId, userId) {
+    const booking = await bookingRepository.get(bookingId);
+
+    if (!booking) {
+        throw new AppError(
+            'Booking not found',
+            StatusCodes.NOT_FOUND
+        );
+    }
+
+    if (booking.userId !== userId) {
+        throw new AppError(
+            'You are not authorized to view this booking',
+            StatusCodes.FORBIDDEN
+        );
+    }
+
+    return booking;
 }
 
 
