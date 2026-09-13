@@ -6,11 +6,23 @@ const inMemDb = {};
 
 async function createBooking(req, res) {
     try {
-        const response = await BookingService.createBooking({
-            userId : req.user.id,
-            flightId: req.body.flightId,
-            noofSeats: req.body.noofSeats
-        });
+    //     const response = await BookingService.createBooking({
+    //         userId : req.user.id,
+    //         flightId: req.body.flightId,
+    //         noofSeats: req.body.noofSeats
+    //     }
+    //     req.headers.authorization
+    // );
+
+
+    const response = await BookingService.createBooking(
+    {
+        userId: req.user.id,
+        flightId: req.body.flightId,
+        noofSeats: req.body.noofSeats
+    },
+    req.headers.authorization
+);
         SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)

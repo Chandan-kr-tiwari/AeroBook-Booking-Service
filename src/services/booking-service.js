@@ -12,7 +12,7 @@ const { BOOKED, CANCELLED } = Enums.BOOKING_STATUS;
 
 const bookingRepository = new BookingRepository();
 
-async function createBooking(data) {
+async function createBooking(data ,token) {
     const transaction = await db.sequelize.transaction();
 
     try {
@@ -26,7 +26,13 @@ async function createBooking(data) {
 
         console.log("Final URL:", url);
 
-        const flight = await axios.get(url);
+        console.log("Token being forwarded:", token);
+
+        const flight = await axios.get(url, {
+            headers: {
+                Authorization: token
+            }
+        });
 
         console.log("Flight response:", flight.data);
 
@@ -52,12 +58,20 @@ async function createBooking(data) {
             transaction
         );
 
-        await axios.patch(
-            `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${data.flightId}/seats`,
-            {
-                seats: data.noofSeats
-            }
-        );
+        // await axios.patch(
+        //     `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${data.flightId}/seats`,
+        //     {
+        //         seats: data.noofSeats
+        //     }
+        // );
+
+
+      await axios.patch(
+    `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${data.flightId}/seats/internal`,
+    {
+        seats: data.noofSeats
+    }
+);
 
         await transaction.commit();
 
@@ -167,14 +181,13 @@ async function cancelBooking(bookingId,userId) {
              StatusCodes.FORBIDDEN
     );
 }
-
         await axios.patch(
-            `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${bookingDetails.flightId}/seats`,
-            {
-                seats: bookingDetails.noofSeats,
-                dec: 0
-            }
-        );
+    `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${bookingDetails.flightId}/seats/internal`,
+    {
+        seats: bookingDetails.noofSeats,
+        dec: 0
+    }
+);
 
         await bookingRepository.update(
             bookingId,
