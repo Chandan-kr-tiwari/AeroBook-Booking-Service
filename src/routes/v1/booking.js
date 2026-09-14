@@ -12,10 +12,6 @@ router.post(
     BookingController.createBooking
 )
 
-// router.post(
-//     '/payments',
-//     BookingController.makePayment
-// );
 
 router.patch(
     '/:bookingId/cancel',
