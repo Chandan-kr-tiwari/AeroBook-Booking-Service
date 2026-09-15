@@ -1,9 +1,10 @@
 const express = require('express');
 
 const { ServerConfig, Logger } = require('./config');
-
-const {ConnectRabbitMq} = require('./events')
+const { ConnectRabbitMq } = require('./events');
 const apiRoutes = require('./routes');
+
+require('./schedulers/booking-scheduler');
 
 const app = express();
 

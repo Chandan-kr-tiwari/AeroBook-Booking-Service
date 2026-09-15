@@ -154,16 +154,33 @@ async function cancelOldBookings() {
     try {
         console.log("Inside service");
 
-        const time =
-            new Date(Date.now() - 1000 * 300);
+        const time = new Date(Date.now() - 1000 * 300);
 
-        const response =
-            await bookingRepository.cancelOldBookings(time);
+        const bookings =
+            await bookingRepository.getOldBookings(time);
 
-        return response;
+        for (const booking of bookings) {
+
+            await bookingRepository.cancelBooking(booking.id);
+
+            await axios.patch(
+                `${ServerConfig.AEROBOOK_FLIGHT_SERVICE}/api/v1/flights/${booking.flightId}/seats/internal`,
+                {
+                    seats: booking.noofSeats,
+                    dec: 0
+                }
+            );
+
+            console.log(
+                `Booking ${booking.id} cancelled and ${booking.noofSeats} seat(s) released`
+            );
+        }
+
+        return bookings;
 
     } catch (error) {
-        console.log(error);
+        console.error("Error cancelling old bookings:", error);
+        throw error;
     }
 }
 
@@ -290,7 +307,6 @@ async function confirmBooking(bookingId) {
 
 module.exports = {
     createBooking,
-    
     cancelBooking,
     cancelOldBookings,
     getBooking,
