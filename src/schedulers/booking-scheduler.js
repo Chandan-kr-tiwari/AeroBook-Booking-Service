@@ -1,10 +1,10 @@
 const cron = require('node-cron');
-const { cancelOldBookings } = require('../services');
+const { BookingService } = require('../services');
 
 cron.schedule('* * * * *', async () => {
     try {
         console.log('Running old booking cleanup...');
-        await cancelOldBookings();
+        await BookingService.cancelOldBookings();
     } catch (error) {
         console.error('Error while cancelling old bookings:', error);
     }
